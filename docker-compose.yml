@@ -23,7 +23,7 @@ services:
     environment:
       - MCP_AUTH_ENABLE_AUTH=${MCP_AUTH_ENABLE_AUTH:-false}
       - MCP_AUTH_AUTH_MODE=${MCP_AUTH_AUTH_MODE:-mock}
-      - MCP_AUTH_DELL_IDENTITY_JWKS_URI=${MCP_AUTH_DELL_IDENTITY_JWKS_URI:-https://example.com/jwks}
+      - MCP_AUTH_IDENTITY_JWKS_URI=${MCP_AUTH_IDENTITY_JWKS_URI:-https://example.com/jwks}
       - MCP_AUTH_API_IDENTIFIER=${MCP_AUTH_API_IDENTIFIER:-ServiceNowMCPServerAPI}
       - MCP_AUTH_INCIDENT_READ_SCOPE=${MCP_AUTH_INCIDENT_READ_SCOPE:-servicenow.incident.read}
       - MCP_AUTH_INCIDENT_WRITE_SCOPE=${MCP_AUTH_INCIDENT_WRITE_SCOPE:-servicenow.incident.write}

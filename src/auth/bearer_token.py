@@ -31,17 +31,17 @@ class AccessToken:
         return any(scope in self.scopes for scope in required_scopes)
 
 
-class DellIdentityAuthProvider:
-    """Dell Identity authentication provider using JWKS for token verification."""
+class IdentityAuthProvider:
+    """Identity provider authentication using JWKS for token verification."""
     
     def __init__(self):
         self.config = get_auth_config()
         self.jwks_client = None
         
-        if self.config.auth_mode == "dell-identity":
+        if self.config.auth_mode == "identity-provider":
             try:
-                self.jwks_client = PyJWKClient(self.config.dell_identity_jwks_uri)
-                logger.info(f"Initialized JWKS client with URI: {self.config.dell_identity_jwks_uri}")
+                self.jwks_client = PyJWKClient(self.config.identity_jwks_uri)
+                logger.info(f"Initialized JWKS client with URI: {self.config.identity_jwks_uri}")
             except Exception as e:
                 logger.error(f"Failed to initialize JWKS client: {e}")
                 raise
@@ -51,8 +51,8 @@ class DellIdentityAuthProvider:
         try:
             if self.config.auth_mode == "mock":
                 return self._verify_mock_token(token)
-            elif self.config.auth_mode == "dell-identity":
-                return self._verify_dell_identity_token(token)
+            elif self.config.auth_mode == "identity-provider":
+                return self._verify_identity_provider_token(token)
             else:
                 logger.error(f"Unknown auth mode: {self.config.auth_mode}")
                 return None
@@ -80,8 +80,8 @@ class DellIdentityAuthProvider:
         logger.warning(f"Invalid mock token: {token}")
         return None
     
-    def _verify_dell_identity_token(self, token: str) -> Optional[AccessToken]:
-        """Verify JWT token using Dell Identity JWKS."""
+    def _verify_identity_provider_token(self, token: str) -> Optional[AccessToken]:
+        """Verify JWT token using identity provider JWKS."""
         if not self.jwks_client:
             logger.error("JWKS client not initialized")
             return None
@@ -99,7 +99,7 @@ class DellIdentityAuthProvider:
                 options={"verify_exp": True}
             )
             
-            logger.debug("Dell Identity token verified successfully")
+            logger.debug("Identity provider token verified successfully")
             return AccessToken(token, claims)
             
         except jwt.ExpiredSignatureError:
@@ -112,19 +112,19 @@ class DellIdentityAuthProvider:
             logger.warning("Invalid token signature")
             return None
         except Exception as e:
-            logger.error(f"Dell Identity token verification failed: {e}")
+            logger.error(f"Identity provider token verification failed: {e}")
             return None
 
 
 # Global auth provider instance
-_auth_provider: Optional[DellIdentityAuthProvider] = None
+_auth_provider: Optional[IdentityAuthProvider] = None
 
 
-def get_auth_provider() -> DellIdentityAuthProvider:
+def get_auth_provider() -> IdentityAuthProvider:
     """Get or create the global auth provider instance."""
     global _auth_provider
     if _auth_provider is None:
-        _auth_provider = DellIdentityAuthProvider()
+        _auth_provider = IdentityAuthProvider()
     return _auth_provider
 
 

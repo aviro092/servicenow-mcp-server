@@ -59,4 +59,4 @@ logs/
 *.cache
 
 # MCP specific
-token_cache.json
+token_cache.jsongh_2.83.0_linux_amd64*

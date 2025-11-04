@@ -133,29 +133,29 @@ class MCPAuthConfig(BaseSettings):
     # Authentication Mode
     auth_mode: str = Field(
         "mock",
-        description="Authentication mode: 'mock' or 'dell-identity'"
+        description="Authentication mode: 'mock' or 'identity-provider'"
     )
     
-    # Dell Identity Configuration
-    dell_identity_jwks_uri: str = Field(
+    # Identity Provider Configuration
+    identity_jwks_uri: str = Field(
         "https://example.com/jwks",
-        description="Dell Identity JWKS URI for token verification"
+        description="Identity provider JWKS URI for token verification"
     )
     
-    dell_identity_token_url: Optional[str] = Field(
+    identity_token_url: Optional[str] = Field(
         None,
-        description="Dell Identity token endpoint URL"
+        description="Identity provider token endpoint URL"
     )
     
-    dell_identity_discovery_url: Optional[str] = Field(
+    identity_discovery_url: Optional[str] = Field(
         None,
-        description="Dell Identity OIDC discovery URL"
+        description="Identity provider OIDC discovery URL"
     )
     
     # API Configuration
     api_identifier: str = Field(
         "ServiceNowMCPServerAPI",
-        description="API identifier from Dell Identity portal"
+        description="API identifier from identity provider"
     )
     
     # ServiceNow MCP Scopes
