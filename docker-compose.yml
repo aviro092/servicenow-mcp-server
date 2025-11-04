@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  servicenow-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: servicenow-mcp-server:latest
+    container_name: servicenow-mcp-server
+    
+    # Default command using FastMCP server
+    command: ["python", "/app/scripts/run_fastmcp_server.py", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
+    
+    # Ports for HTTP/SSE transport
+    ports:
+      - "8000:8000"
+    
+    # Environment variables from .env file
+    env_file:
+      - .env
+    
+    # Additional environment variables for Bearer Token auth
+    environment:
+      - MCP_AUTH_ENABLE_AUTH=${MCP_AUTH_ENABLE_AUTH:-false}
+      - MCP_AUTH_AUTH_MODE=${MCP_AUTH_AUTH_MODE:-mock}
+      - MCP_AUTH_DELL_IDENTITY_JWKS_URI=${MCP_AUTH_DELL_IDENTITY_JWKS_URI:-https://example.com/jwks}
+      - MCP_AUTH_API_IDENTIFIER=${MCP_AUTH_API_IDENTIFIER:-ServiceNowMCPServerAPI}
+      - MCP_AUTH_INCIDENT_READ_SCOPE=${MCP_AUTH_INCIDENT_READ_SCOPE:-servicenow.incident.read}
+      - MCP_AUTH_INCIDENT_WRITE_SCOPE=${MCP_AUTH_INCIDENT_WRITE_SCOPE:-servicenow.incident.write}
+    
+    # Volume mounts
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./logs:/app/logs
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # File descriptor limits
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 1024
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check for HTTP endpoint
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # Alternative stdio service
+  servicenow-mcp-stdio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: servicenow-mcp-server:latest
+    container_name: servicenow-mcp-stdio
+    
+    # Command for stdio transport
+    command: ["python", "/app/scripts/run_fastmcp_server.py", "--transport", "stdio"]
+    
+    # Environment variables from .env file
+    env_file:
+      - .env
+    
+    # Volume mounts
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./logs:/app/logs
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # File descriptor limits
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 1024
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Simple health check for stdio
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # By default, this service is not started
+    profiles:
+      - stdio
+
+  # MCP Inspector for testing and debugging
+  mcp-inspector:
+    image: ghcr.io/modelcontextprotocol/inspector:latest
+    container_name: mcp-inspector
+    
+    # Ports for MCP Inspector
+    ports:
+      - "6274:6274"
+      - "6277:6277"
+    
+    # Environment variables to connect to ServiceNow MCP server
+    environment:
+      - MCP_SERVER_URL=http://servicenow-mcp-server:8000/mcp
+    
+    # Depends on the main ServiceNow MCP server
+    depends_on:
+      servicenow-mcp:
+        condition: service_healthy
+    
+    # File descriptor limits
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 1024
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
