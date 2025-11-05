@@ -27,6 +27,7 @@ services:
       - MCP_AUTH_API_IDENTIFIER=${MCP_AUTH_API_IDENTIFIER:-ServiceNowMCPServerAPI}
       - MCP_AUTH_INCIDENT_READ_SCOPE=${MCP_AUTH_INCIDENT_READ_SCOPE:-servicenow.incident.read}
       - MCP_AUTH_INCIDENT_WRITE_SCOPE=${MCP_AUTH_INCIDENT_WRITE_SCOPE:-servicenow.incident.write}
+      - MCP_AUTH_CHANGE_REQUEST_READ_SCOPE=${MCP_AUTH_CHANGE_REQUEST_READ_SCOPE:-servicenow.changerequest.read}
     
     # Volume mounts
     volumes:

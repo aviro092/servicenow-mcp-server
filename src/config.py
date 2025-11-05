@@ -169,6 +169,28 @@ class MCPAuthConfig(BaseSettings):
         description="Scope for creating and updating incidents"
     )
     
+    # Change Request Scopes
+    change_request_read_scope: str = Field(
+        "servicenow.changerequest.read",
+        description="Scope for reading and searching change requests"
+    )
+    
+    change_request_write_scope: str = Field(
+        "servicenow.changerequest.write",
+        description="Scope for updating change requests"
+    )
+    
+    # Incident Task Scopes
+    incident_task_read_scope: str = Field(
+        "servicenow.incidenttask.read",
+        description="Scope for reading incident task details"
+    )
+    
+    incident_task_write_scope: str = Field(
+        "servicenow.incidenttask.write",
+        description="Scope for updating incident tasks"
+    )
+    
     # Mock Token Configuration
     mock_tokens: list[str] = Field(
         default_factory=lambda: [
@@ -185,7 +207,11 @@ class MCPAuthConfig(BaseSettings):
         """Get all ServiceNow MCP scopes."""
         return [
             self.incident_read_scope,
-            self.incident_write_scope
+            self.incident_write_scope,
+            self.change_request_read_scope,
+            self.change_request_write_scope,
+            self.incident_task_read_scope,
+            self.incident_task_write_scope
         ]
     
     model_config = {

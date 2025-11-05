@@ -299,6 +299,247 @@ class ServiceNowClient:
         except Exception as e:
             logger.error(f"Error searching incidents: {e}")
             raise
+
+    async def search_change_requests(self, search_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Search change request records based on query parameters.
+        
+        Args:
+            search_params: Dictionary containing search parameters
+            
+        Returns:
+            Search results with list of matching change requests
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+            ServiceNowNotFoundError: When no change requests found
+        """
+        try:
+            # Build query parameters
+            params = {}
+            for key, value in search_params.items():
+                if value is not None:
+                    params[key] = str(value).lower() if isinstance(value, bool) else str(value)
+            
+            logger.debug(f"Searching change requests with params: {params}")
+            
+            response = await self._make_request(
+                "GET", 
+                f"{self.config.api_base_path}/itsm/changerequest",
+                params=params
+            )
+            
+            # Handle different response formats
+            if isinstance(response, dict):
+                if "result" in response:
+                    change_requests = response["result"]
+                else:
+                    change_requests = [response] if response else []
+            elif isinstance(response, list):
+                change_requests = response
+            else:
+                change_requests = []
+            
+            logger.info(f"Found {len(change_requests)} change requests")
+            
+            return {
+                "success": True,
+                "count": len(change_requests),
+                "change_requests": change_requests,
+                "search_criteria": search_params
+            }
+            
+        except ServiceNowNotFoundError:
+            # Return empty results instead of raising error
+            logger.info("No change requests found matching criteria")
+            return {
+                "success": True,
+                "count": 0,
+                "change_requests": [],
+                "search_criteria": search_params,
+                "message": "No change requests found matching the search criteria"
+            }
+        except Exception as e:
+            logger.error(f"Error searching change requests: {e}")
+            raise
+
+    async def get_change_request(self, changerequest_number: str) -> Dict[str, Any]:
+        """Get a change request by its number.
+        
+        Args:
+            changerequest_number: The change request number (e.g., CHG0035060)
+            
+        Returns:
+            Change request details
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+            ServiceNowNotFoundError: When change request not found
+        """
+        try:
+            logger.debug(f"Fetching change request: {changerequest_number}")
+            
+            endpoint = f"{self.config.api_base_path}/itsm/changerequest/{changerequest_number}"
+            response = await self._make_request("GET", endpoint)
+            
+            logger.info(f"Successfully retrieved change request: {changerequest_number}")
+            return response
+            
+        except ServiceNowNotFoundError:
+            logger.warning(f"Change request {changerequest_number} not found")
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching change request {changerequest_number}: {e}")
+            raise
+
+    async def update_change_request(self, changerequest_number: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a change request by its number.
+        
+        Args:
+            changerequest_number: The change request number (e.g., CHG0035060)
+            update_data: Dictionary containing update fields
+            
+        Returns:
+            Update response with updated change request details
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+            ServiceNowNotFoundError: When change request not found
+        """
+        try:
+            logger.debug(f"Updating change request: {changerequest_number} with data: {update_data}")
+            
+            endpoint = f"{self.config.api_base_path}/itsm/changerequest/{changerequest_number}"
+            
+            # Convert boolean values to strings as ServiceNow expects
+            processed_data = {}
+            for key, value in update_data.items():
+                if isinstance(value, bool):
+                    processed_data[key] = str(value).lower()
+                else:
+                    processed_data[key] = value
+            
+            response = await self._make_request("PUT", endpoint, json=processed_data)
+            
+            logger.info(f"Successfully updated change request: {changerequest_number}")
+            return response
+            
+        except ServiceNowNotFoundError:
+            logger.warning(f"Change request {changerequest_number} not found for update")
+            raise
+        except Exception as e:
+            logger.error(f"Error updating change request {changerequest_number}: {e}")
+            raise
+
+    async def approve_change_request(self, changerequest_number: str, approval_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Approve or reject a change request by its number.
+        
+        Args:
+            changerequest_number: The change request number (e.g., CHG0035060)
+            approval_data: Dictionary containing approval data including state and approver_email
+            
+        Returns:
+            Approval response with status
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+            ServiceNowNotFoundError: When change request not found
+        """
+        try:
+            logger.debug(f"Processing approval for change request: {changerequest_number} with data: {approval_data}")
+            
+            endpoint = f"{self.config.api_base_path}/itsm/changerequest/{changerequest_number}"
+            
+            response = await self._make_request("PATCH", endpoint, json_data=approval_data)
+            
+            approval_state = approval_data.get('state', 'unknown')
+            logger.info(f"Successfully {approval_state} change request: {changerequest_number}")
+            return response
+            
+        except ServiceNowNotFoundError:
+            logger.warning(f"Change request {changerequest_number} not found for approval")
+            raise
+        except Exception as e:
+            logger.error(f"Error processing approval for change request {changerequest_number}: {e}")
+            raise
+
+    async def get_incident_task(self, incident_task_number: str) -> Dict[str, Any]:
+        """Get incident task record details by task number.
+        
+        Args:
+            incident_task_number: The incident task number (e.g., TASK0133364)
+            
+        Returns:
+            Incident task record data
+            
+        Raises:
+            ServiceNowNotFoundError: If incident task not found
+            ServiceNowAPIError: For other API errors
+        """
+        endpoint = f"{self.config.api_base_path}/itsm/incident_task/{incident_task_number}"
+        logger.info(f"Fetching incident task: {incident_task_number}")
+        
+        try:
+            response = await self._make_request("GET", endpoint)
+            return response.get("result", response)
+        except ServiceNowNotFoundError:
+            logger.warning(f"Incident task not found: {incident_task_number}")
+            raise ServiceNowNotFoundError(f"Incident task {incident_task_number} not found")
+        except Exception as e:
+            logger.error(f"Error fetching incident task {incident_task_number}: {e}")
+            raise
+
+    async def update_incident_task(self, incident_task_number: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update an incident task by its number.
+        
+        Args:
+            incident_task_number: The incident task number (e.g., TASK0133364)
+            update_data: Dictionary containing update fields
+            
+        Returns:
+            Update response with updated incident task details
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+            ServiceNowNotFoundError: When incident task not found
+        """
+        try:
+            logger.debug(f"Updating incident task: {incident_task_number} with data: {update_data}")
+            
+            endpoint = f"{self.config.api_base_path}/itsm/incident_task/{incident_task_number}"
+            
+            response = await self._make_request("PUT", endpoint, json_data=update_data)
+            
+            logger.info(f"Successfully updated incident task: {incident_task_number}")
+            return response
+            
+        except ServiceNowNotFoundError:
+            logger.warning(f"Incident task {incident_task_number} not found for update")
+            raise
+        except Exception as e:
+            logger.error(f"Error updating incident task {incident_task_number}: {e}")
+            raise
+
+    async def create_incident_task(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new incident task record.
+        
+        Args:
+            task_data: Dictionary containing incident task creation data
+            
+        Returns:
+            Created incident task record data
+            
+        Raises:
+            ServiceNowAPIError: For API errors
+        """
+        endpoint = f"{self.config.api_base_path}/itsm/incident_task"
+        logger.info("Creating new incident task")
+        
+        try:
+            response = await self._make_request("POST", endpoint, json_data=task_data)
+            return response.get("result", response)
+        except Exception as e:
+            logger.error(f"Error creating incident task: {e}")
+            raise
     
     async def close(self) -> None:
         """Close the HTTP client."""
