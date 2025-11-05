@@ -48,16 +48,16 @@ def setup_signal_handlers() -> None:
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-async def startup_hook() -> None:
-    """Startup hook to initialize services."""
+def initialize_services() -> None:
+    """Initialize services during server startup."""
     logger.info("Starting ServiceNow MCP Server...")
     # Pre-initialize the container to validate configuration
     container = get_container()
     logger.info("Service container initialized")
 
 
-async def shutdown_hook() -> None:
-    """Shutdown hook to cleanup resources."""
+async def cleanup_services() -> None:
+    """Cleanup services during shutdown."""
     logger.info("Shutting down ServiceNow MCP Server...")
     await cleanup_container()
     logger.info("Cleanup completed")
@@ -89,6 +89,9 @@ def main() -> None:
     # Setup signal handlers
     setup_signal_handlers()
     
+    # Initialize services
+    initialize_services()
+    
     # Create server
     server = create_server()
     
@@ -97,14 +100,12 @@ def main() -> None:
         if args.transport in ["http", "sse"]:
             logger.info(f"Server will be available at {args.transport}://{args.host}:{args.port}")
         
-        # Run the server with hooks
+        # Run the server
         server.run(
             transport=args.transport,
             host=args.host,
             port=args.port,
-            show_banner=not args.no_banner,
-            startup_hook=startup_hook,
-            shutdown_hook=shutdown_hook
+            show_banner=not args.no_banner
         )
         
     except KeyboardInterrupt:
@@ -116,7 +117,7 @@ def main() -> None:
         # Ensure cleanup happens
         import asyncio
         try:
-            asyncio.run(shutdown_hook())
+            asyncio.run(cleanup_services())
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
 
