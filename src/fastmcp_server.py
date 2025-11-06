@@ -101,12 +101,18 @@ def main() -> None:
             logger.info(f"Server will be available at {args.transport}://{args.host}:{args.port}")
         
         # Run the server
-        server.run(
-            transport=args.transport,
-            host=args.host,
-            port=args.port,
-            show_banner=not args.no_banner
-        )
+        if args.transport == "stdio":
+            server.run(
+                transport=args.transport,
+                show_banner=not args.no_banner
+            )
+        else:
+            server.run(
+                transport=args.transport,
+                host=args.host,
+                port=args.port,
+                show_banner=not args.no_banner
+            )
         
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
