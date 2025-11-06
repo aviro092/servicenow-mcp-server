@@ -3,7 +3,8 @@
 import logging
 from typing import Optional
 
-from auth import require_scope
+from auth.scope_validator import require_scope
+from fastapi import Depends
 from config import get_auth_config
 from container import get_container
 from tools.incident_task_tools import format_incident_task_display, get_incident_task_fields_info
@@ -12,7 +13,10 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
-async def get_incident_task(incident_task_number: str) -> str:
+async def get_incident_task(
+    incident_task_number: str,
+    user = Depends(require_scope(auth_config.incident_task_read_scope))
+) -> str:
     """Get incident task record details by task number.
     
     This tool retrieves comprehensive details about a ServiceNow incident task,
@@ -31,10 +35,7 @@ async def get_incident_task(incident_task_number: str) -> str:
         - Work notes and comments
         - Direct URL to the task in ServiceNow
     """
-    # Check authentication and authorization
-    require_scope(auth_config.incident_task_read_scope)
-    
-    logger.info(f"Fetching incident task details for: {incident_task_number}")
+    logger.info(f"Fetching incident task details for: {incident_task_number} (user: {user.claims.get('sub', 'unknown')})")
     
     try:
         container = get_container()
@@ -65,15 +66,14 @@ async def get_incident_task(incident_task_number: str) -> str:
         return f"Error: {error_msg}"
 
 
-async def list_incident_task_fields() -> str:
+async def list_incident_task_fields(
+    user = Depends(require_scope(auth_config.incident_task_read_scope))
+) -> str:
     """List all available incident task fields and their descriptions.
     
     Returns:
         Formatted list of incident task fields with descriptions and examples
     """
-    # Check authentication and authorization
-    require_scope(auth_config.incident_task_read_scope)
-    
     return get_incident_task_fields_info()
 
 
@@ -84,7 +84,8 @@ async def update_incident_task(
     description: Optional[str] = None,
     priority: Optional[int] = None,
     assignment_group: Optional[str] = None,
-    assigned_to: Optional[str] = None
+    assigned_to: Optional[str] = None,
+    user = Depends(require_scope(auth_config.incident_task_write_scope))
 ) -> str:
     """Update incident task record by task number.
     
@@ -103,10 +104,7 @@ async def update_incident_task(
     Returns:
         Success message with updated incident task details or error message
     """
-    # Check authentication and authorization
-    require_scope(auth_config.incident_task_write_scope)
-    
-    logger.info(f"Updating incident task: {incident_task_number}")
+    logger.info(f"Updating incident task: {incident_task_number} (user: {user.claims.get('sub', 'unknown')})")
     
     try:
         container = get_container()
@@ -168,7 +166,8 @@ async def create_incident_task(
     description: Optional[str] = None,
     priority: Optional[int] = None,
     assignment_group: Optional[str] = None,
-    assigned_to: Optional[str] = None
+    assigned_to: Optional[str] = None,
+    user = Depends(require_scope(auth_config.incident_task_write_scope))
 ) -> str:
     """Create a new incident task record.
     
@@ -189,10 +188,7 @@ async def create_incident_task(
     Returns:
         Success message with created incident task details or error message
     """
-    # Check authentication and authorization
-    require_scope(auth_config.incident_task_write_scope)
-    
-    logger.info("Creating new incident task")
+    logger.info(f"Creating new incident task (user: {user.claims.get('sub', 'unknown')})")
     
     try:
         container = get_container()
