@@ -4,15 +4,25 @@ import logging
 from typing import Optional, Any, Dict
 import jwt
 from jwt import PyJWKClient
-from fastmcp.server.auth.base import AuthProvider
-from fastmcp.server.auth.models import AccessToken
 
 from config import get_auth_config
 
 logger = logging.getLogger(__name__)
 
 
-class IdentityProviderAuth(AuthProvider):
+class AccessToken:
+    """Simple AccessToken implementation for our authentication."""
+    
+    def __init__(self, token: str, claims: dict, scopes: list):
+        self.token = token
+        self.claims = claims
+        self.scopes = scopes
+        
+    def has_scope(self, scope: str) -> bool:
+        return scope in self.scopes
+
+
+class IdentityProviderAuth:
     """Identity provider authentication using JWKS for token verification."""
     
     def __init__(

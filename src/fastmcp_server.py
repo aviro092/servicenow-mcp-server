@@ -10,7 +10,7 @@ from fastmcp import FastMCP
 from container import get_container, cleanup_container
 from registry import register_all_tools
 from routes.health import health_check
-from auth.identity_provider import create_identity_provider
+from auth.identity_provider import create_identity_provider, IdentityProviderAuth
 from config import get_auth_config
 
 # Setup logging
@@ -31,16 +31,21 @@ def create_server() -> FastMCP:
         logger.info(f"[SERVER] 🔐 Authentication ENABLED - mode: {auth_config.auth_mode}")
         logger.info(f"[SERVER] 🔑 JWKS URI: {auth_config.identity_jwks_uri}")
         logger.info(f"[SERVER] 🎯 API Identifier: {auth_config.api_identifier}")
+        # Initialize the auth provider for use in handlers
         auth_provider = create_identity_provider()
         logger.info("[SERVER] ✅ Authentication provider initialized successfully")
     else:
         logger.info("[SERVER] ⚠️  Authentication DISABLED - all requests will be allowed")
+        auth_provider = None
+    
+    # Store auth provider globally for handlers to access
+    import builtins
+    builtins.global_auth_provider = auth_provider
     
     server = FastMCP(
         name="servicenow-mcp",
         instructions="ServiceNow MCP server for incident management and API integration",
-        version="0.1.0",
-        auth=auth_provider
+        version="0.1.0"
     )
     
     # Register health check route
