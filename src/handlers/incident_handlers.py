@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
-@require_scope(auth_config.incident_read_scope)
 async def get_incident(incident_number: str) -> str:
     """Get incident record details by incident number.
     
@@ -31,6 +30,9 @@ async def get_incident(incident_number: str) -> str:
         - Resolution information (if resolved)
         - Comments and notes
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_read_scope)
+    
     logger.info(f"Fetching incident details for: {incident_number}")
     
     try:
@@ -62,17 +64,18 @@ async def get_incident(incident_number: str) -> str:
         return f"Error: {error_msg}"
 
 
-@require_scope(auth_config.incident_read_scope)
 async def list_incident_fields() -> str:
     """List all available incident fields and their descriptions.
     
     Returns:
         Formatted list of incident fields with descriptions and examples
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_read_scope)
+    
     return get_incident_fields_info()
 
 
-@require_scope(auth_config.incident_write_scope)
 async def update_incident(
     incident_number: str,
     state: Optional[int] = None,
@@ -111,6 +114,9 @@ async def update_incident(
     Returns:
         Success message with updated incident details or error message
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_write_scope)
+    
     logger.info(f"Updating incident: {incident_number}")
     
     try:
@@ -177,7 +183,6 @@ async def update_incident(
         return f"Error: {error_msg}"
 
 
-@require_scope(auth_config.incident_write_scope)
 async def create_incident(
     short_description: str,
     description: str,
@@ -214,6 +219,9 @@ async def create_incident(
     Returns:
         Success message with created incident details or error message
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_write_scope)
+    
     logger.info("Creating new incident")
     
     try:
@@ -271,7 +279,6 @@ async def create_incident(
         return f"Error: {error_msg}"
 
 
-@require_scope(auth_config.incident_read_scope)
 async def search_incidents(
     active: bool = True,
     requested_by: Optional[str] = None,
@@ -306,6 +313,9 @@ async def search_incidents(
     Returns:
         Formatted list of matching incidents or error message
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_read_scope)
+    
     logger.info("Searching incidents with specified criteria")
     
     try:

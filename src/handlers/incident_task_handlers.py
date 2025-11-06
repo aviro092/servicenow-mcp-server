@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
-@require_scope(auth_config.incident_task_read_scope)
 async def get_incident_task(incident_task_number: str) -> str:
     """Get incident task record details by task number.
     
@@ -32,6 +31,9 @@ async def get_incident_task(incident_task_number: str) -> str:
         - Work notes and comments
         - Direct URL to the task in ServiceNow
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_task_read_scope)
+    
     logger.info(f"Fetching incident task details for: {incident_task_number}")
     
     try:
@@ -63,17 +65,18 @@ async def get_incident_task(incident_task_number: str) -> str:
         return f"Error: {error_msg}"
 
 
-@require_scope(auth_config.incident_task_read_scope)
 async def list_incident_task_fields() -> str:
     """List all available incident task fields and their descriptions.
     
     Returns:
         Formatted list of incident task fields with descriptions and examples
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_task_read_scope)
+    
     return get_incident_task_fields_info()
 
 
-@require_scope(auth_config.incident_task_write_scope)
 async def update_incident_task(
     incident_task_number: str,
     short_description: str,
@@ -100,6 +103,9 @@ async def update_incident_task(
     Returns:
         Success message with updated incident task details or error message
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_task_write_scope)
+    
     logger.info(f"Updating incident task: {incident_task_number}")
     
     try:
@@ -153,7 +159,6 @@ async def update_incident_task(
         return f"Error: {error_msg}"
 
 
-@require_scope(auth_config.incident_task_write_scope)
 async def create_incident_task(
     incident_number: str,
     short_description: str,
@@ -184,6 +189,9 @@ async def create_incident_task(
     Returns:
         Success message with created incident task details or error message
     """
+    # Check authentication and authorization
+    require_scope(auth_config.incident_task_write_scope)
+    
     logger.info("Creating new incident task")
     
     try:
