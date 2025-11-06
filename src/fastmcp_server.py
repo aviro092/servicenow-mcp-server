@@ -15,7 +15,7 @@ from config import get_auth_config
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO, 
+    level=logging.DEBUG,  # Temporarily enable debug logging 
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
