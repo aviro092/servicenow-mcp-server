@@ -443,13 +443,21 @@ async def search_incidents(
             
             # Show summary of each incident
             for i, incident in enumerate(incidents[:10], 1):  # Limit to first 10 for readability
-                lines.append(f"\n{i}. {incident.get('number', 'N/A')}")
-                lines.append(f"   State: {incident.get('state', 'N/A')}")
-                lines.append(f"   Priority: {incident.get('priority', 'N/A')}")
-                lines.append(f"   Requested By: {incident.get('requested_by', 'N/A')}")
-                lines.append(f"   Company: {incident.get('company', 'N/A')}")
-                lines.append(f"   Short Description: {incident.get('short_description', 'N/A')}")
-                lines.append(f"   Assignment Group: {incident.get('assignment_group', 'N/A')}")
+                # Handle case where incident might be a string instead of dict
+                if isinstance(incident, str):
+                    lines.append(f"\n{i}. {incident}")
+                    lines.append(f"   Note: Incident data returned as string format")
+                elif isinstance(incident, dict):
+                    lines.append(f"\n{i}. {incident.get('number', 'N/A')}")
+                    lines.append(f"   State: {incident.get('state', 'N/A')}")
+                    lines.append(f"   Priority: {incident.get('priority', 'N/A')}")
+                    lines.append(f"   Requested By: {incident.get('requested_by', 'N/A')}")
+                    lines.append(f"   Company: {incident.get('company', 'N/A')}")
+                    lines.append(f"   Short Description: {incident.get('short_description', 'N/A')}")
+                    lines.append(f"   Assignment Group: {incident.get('assignment_group', 'N/A')}")
+                else:
+                    lines.append(f"\n{i}. {str(incident)}")
+                    lines.append(f"   Note: Unexpected incident data format: {type(incident)}")
             
             if count > 10:
                 lines.append(f"\n... and {count - 10} more incidents")
@@ -565,15 +573,23 @@ async def search_change_requests(
             
             # Show summary of each change request
             for i, cr in enumerate(change_requests[:10], 1):  # Limit to first 10 for readability
-                lines.append(f"\n{i}. {cr.get('number', 'N/A')}")
-                lines.append(f"   State: {cr.get('state', 'N/A')}")
-                lines.append(f"   Type: {cr.get('type', 'N/A')}")
-                lines.append(f"   Priority: {cr.get('priority', 'N/A')}")
-                lines.append(f"   Risk: {cr.get('risk', 'N/A')}")
-                lines.append(f"   Requested By: {cr.get('requested_by', 'N/A')}")
-                lines.append(f"   Company: {cr.get('company', 'N/A')}")
-                lines.append(f"   Short Description: {cr.get('short_description', 'N/A')}")
-                lines.append(f"   Assignment Group: {cr.get('assignment_group', 'N/A')}")
+                # Handle case where change request might be a string instead of dict
+                if isinstance(cr, str):
+                    lines.append(f"\n{i}. {cr}")
+                    lines.append(f"   Note: Change request data returned as string format")
+                elif isinstance(cr, dict):
+                    lines.append(f"\n{i}. {cr.get('number', 'N/A')}")
+                    lines.append(f"   State: {cr.get('state', 'N/A')}")
+                    lines.append(f"   Type: {cr.get('type', 'N/A')}")
+                    lines.append(f"   Priority: {cr.get('priority', 'N/A')}")
+                    lines.append(f"   Risk: {cr.get('risk', 'N/A')}")
+                    lines.append(f"   Requested By: {cr.get('requested_by', 'N/A')}")
+                    lines.append(f"   Company: {cr.get('company', 'N/A')}")
+                    lines.append(f"   Short Description: {cr.get('short_description', 'N/A')}")
+                    lines.append(f"   Assignment Group: {cr.get('assignment_group', 'N/A')}")
+                else:
+                    lines.append(f"\n{i}. {str(cr)}")
+                    lines.append(f"   Note: Unexpected change request data format: {type(cr)}")
             
             if count > 10:
                 lines.append(f"\n... and {count - 10} more change requests")

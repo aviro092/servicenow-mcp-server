@@ -87,6 +87,10 @@ class IdentityAuthProvider:
             return None
         
         try:
+            # Log partial token received for debugging
+            token_preview = f"{token[:20]}...{token[-10:]}" if len(token) > 30 else token
+            logger.info(f"Received JWT token for verification: {token_preview}")
+            
             # Get signing key from JWKS
             signing_key = self.jwks_client.get_signing_key_from_jwt(token)
             
@@ -99,7 +103,8 @@ class IdentityAuthProvider:
                 options={"verify_exp": True}
             )
             
-            logger.debug("Identity provider token verified successfully")
+            logger.info("Identity provider token verification passed successfully")
+            logger.debug(f"Token claims: sub={claims.get('sub')}, scope={claims.get('scope', 'none')}")
             return AccessToken(token, claims)
             
         except jwt.ExpiredSignatureError:
