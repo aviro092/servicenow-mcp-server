@@ -274,7 +274,7 @@ class IncidentTools:
             try:
                 incident = IncidentResponse(**incident_data)
                 logger.debug(f"Successfully validated incident data for: {incident_number}")
-                return incident.dict()
+                return incident.model_dump()
             except Exception as e:
                 logger.warning(f"Data validation failed for incident {incident_number}: {e}")
                 # Return raw data if validation fails

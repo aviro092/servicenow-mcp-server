@@ -8,11 +8,11 @@ from pydantic import BaseModel, Field, field_validator
 class ResolutionInfo(BaseModel):
     """Resolution information for an incident."""
     
-    resolution_code: Optional[int] = Field(None, description="Incident closed code details")
+    resolution_code: Optional[str] = Field(None, description="Incident closed code details")
     resolution_notes: Optional[str] = Field(None, description="Incident resolution notes")
     resolved_at: Optional[str] = Field(None, description="Incident resolved date")
     resolved_by: Optional[str] = Field(None, description="User who resolved the incident")
-    knowledge: Optional[str] = Field(None, description="Mapped knowledge article info")
+    knowledge: Optional[Union[str, bool]] = Field(None, description="Mapped knowledge article info")
 
 
 class IncidentTask(BaseModel):
