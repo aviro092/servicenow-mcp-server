@@ -3,8 +3,7 @@
 import logging
 from typing import Optional
 
-from auth.scope_validator import require_scope
-from fastapi import Depends
+from auth.scope_validator import get_current_user, require_scope
 from config import get_auth_config
 from container import get_container
 from tools.incident_tools import format_incident_display, get_incident_fields_info
@@ -14,8 +13,7 @@ auth_config = get_auth_config()
 
 
 async def get_incident(
-    incident_number: str,
-    user = Depends(require_scope(auth_config.incident_read_scope))
+    incident_number: str
 ) -> str:
     """Get incident record details by incident number.
     
@@ -34,6 +32,10 @@ async def get_incident(
         - Resolution information (if resolved)
         - Comments and notes
     """
+    # Check authentication and authorization
+    from auth.scope_validator import check_scope_access
+    user = await check_scope_access(auth_config.incident_read_scope)
+    
     logger.info(f"Fetching incident details for: {incident_number} (user: {user.claims.get('sub', 'unknown')})")
     
     try:
@@ -65,14 +67,16 @@ async def get_incident(
         return f"Error: {error_msg}"
 
 
-async def list_incident_fields(
-    user = Depends(require_scope(auth_config.incident_read_scope))
-) -> str:
+async def list_incident_fields() -> str:
     """List all available incident fields and their descriptions.
     
     Returns:
         Formatted list of incident fields with descriptions and examples
     """
+    # Check authentication and authorization
+    from auth.scope_validator import check_scope_access
+    user = await check_scope_access(auth_config.incident_read_scope)
+    
     return get_incident_fields_info()
 
 
@@ -89,8 +93,7 @@ async def update_incident(
     service_impacting: Optional[str] = None,
     comments: Optional[str] = None,
     notes: Optional[str] = None,
-    customer_reference_id: Optional[str] = None,
-    user = Depends(require_scope(auth_config.incident_write_scope))
+    customer_reference_id: Optional[str] = None
 ) -> str:
     """Update incident record by incident number.
     
@@ -115,6 +118,10 @@ async def update_incident(
     Returns:
         Success message with updated incident details or error message
     """
+    # Check authentication and authorization
+    from auth.scope_validator import check_scope_access
+    user = await check_scope_access(auth_config.incident_write_scope)
+    
     logger.info(f"Updating incident: {incident_number} (user: {user.claims.get('sub', 'unknown')})")
     
     try:
@@ -193,8 +200,7 @@ async def create_incident(
     assigned_to: Optional[str] = None,
     assignment_group: Optional[str] = None,
     contact_type: Optional[str] = None,
-    customer_reference_id: Optional[str] = None,
-    user = Depends(require_scope(auth_config.incident_write_scope))
+    customer_reference_id: Optional[str] = None
 ) -> str:
     """Create a new incident record.
     
@@ -218,6 +224,10 @@ async def create_incident(
     Returns:
         Success message with created incident details or error message
     """
+    # Check authentication and authorization
+    from auth.scope_validator import check_scope_access
+    user = await check_scope_access(auth_config.incident_write_scope)
+    
     logger.info(f"Creating new incident (user: {user.claims.get('sub', 'unknown')})")
     
     try:
@@ -286,8 +296,7 @@ async def search_incidents(
     state: Optional[int] = None,
     priority: Optional[int] = None,
     assignment_group: Optional[str] = None,
-    assigned_to: Optional[str] = None,
-    user = Depends(require_scope(auth_config.incident_read_scope))
+    assigned_to: Optional[str] = None
 ) -> str:
     """Search incident records based on query parameters.
     
@@ -310,6 +319,10 @@ async def search_incidents(
     Returns:
         Formatted list of matching incidents or error message
     """
+    # Check authentication and authorization
+    from auth.scope_validator import check_scope_access
+    user = await check_scope_access(auth_config.incident_read_scope)
+    
     logger.info(f"Searching incidents with specified criteria (user: {user.claims.get('sub', 'unknown')})")
     
     try:
