@@ -1,9 +1,9 @@
-"""MCP tool handlers for incident task management."""
+"""Simplified MCP tool handlers for incident task management."""
 
 import logging
 from typing import Optional
 
-from auth.scope_validator import require_scope
+from auth.decorators import requires_scope
 from config import get_auth_config
 from container import get_container
 from tools.incident_task_tools import format_incident_task_display, get_incident_task_fields_info
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
+@requires_scope(auth_config.incident_task_read_scope)
 async def get_incident_task(
     incident_task_number: str
 ) -> str:
@@ -33,11 +34,7 @@ async def get_incident_task(
         - Work notes and comments
         - Direct URL to the task in ServiceNow
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_task_read_scope)
-    
-    logger.info(f"Fetching incident task details for: {incident_task_number} (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Fetching incident task details for: {incident_task_number}")
     
     try:
         container = get_container()
@@ -68,19 +65,17 @@ async def get_incident_task(
         return f"Error: {error_msg}"
 
 
+@requires_scope(auth_config.incident_task_read_scope)
 async def list_incident_task_fields() -> str:
     """List all available incident task fields and their descriptions.
     
     Returns:
         Formatted list of incident task fields with descriptions and examples
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_task_read_scope)
-    
     return get_incident_task_fields_info()
 
 
+@requires_scope(auth_config.incident_task_write_scope)
 async def update_incident_task(
     incident_task_number: str,
     short_description: str,
@@ -107,11 +102,7 @@ async def update_incident_task(
     Returns:
         Success message with updated incident task details or error message
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_task_write_scope)
-    
-    logger.info(f"Updating incident task: {incident_task_number} (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Updating incident task: {incident_task_number}")
     
     try:
         container = get_container()
@@ -164,6 +155,7 @@ async def update_incident_task(
         return f"Error: {error_msg}"
 
 
+@requires_scope(auth_config.incident_task_write_scope)
 async def create_incident_task(
     incident_number: str,
     short_description: str,
@@ -194,11 +186,7 @@ async def create_incident_task(
     Returns:
         Success message with created incident task details or error message
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_task_write_scope)
-    
-    logger.info(f"Creating new incident task (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Creating new incident task")
     
     try:
         container = get_container()

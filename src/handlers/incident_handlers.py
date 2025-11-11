@@ -1,9 +1,9 @@
-"""MCP tool handlers for incident management."""
+"""Simplified MCP tool handlers for incident management."""
 
 import logging
 from typing import Optional
 
-from auth.scope_validator import get_current_user, require_scope
+from auth.decorators import requires_scope, optional_auth
 from config import get_auth_config
 from container import get_container
 from tools.incident_tools import format_incident_display, get_incident_fields_info
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
+@requires_scope(auth_config.incident_read_scope)
 async def get_incident(
     incident_number: str
 ) -> str:
@@ -32,11 +33,7 @@ async def get_incident(
         - Resolution information (if resolved)
         - Comments and notes
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_read_scope)
-    
-    logger.info(f"Fetching incident details for: {incident_number} (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Fetching incident details for: {incident_number}")
     
     try:
         container = get_container()
@@ -67,19 +64,17 @@ async def get_incident(
         return f"Error: {error_msg}"
 
 
+@requires_scope(auth_config.incident_read_scope)
 async def list_incident_fields() -> str:
     """List all available incident fields and their descriptions.
     
     Returns:
         Formatted list of incident fields with descriptions and examples
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_read_scope)
-    
     return get_incident_fields_info()
 
 
+@requires_scope(auth_config.incident_write_scope)
 async def update_incident(
     incident_number: str,
     state: Optional[int] = None,
@@ -118,11 +113,7 @@ async def update_incident(
     Returns:
         Success message with updated incident details or error message
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_write_scope)
-    
-    logger.info(f"Updating incident: {incident_number} (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Updating incident: {incident_number}")
     
     try:
         container = get_container()
@@ -188,6 +179,7 @@ async def update_incident(
         return f"Error: {error_msg}"
 
 
+@requires_scope(auth_config.incident_write_scope)
 async def create_incident(
     short_description: str,
     description: str,
@@ -224,11 +216,7 @@ async def create_incident(
     Returns:
         Success message with created incident details or error message
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_write_scope)
-    
-    logger.info(f"Creating new incident (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Creating new incident")
     
     try:
         container = get_container()
@@ -285,6 +273,7 @@ async def create_incident(
         return f"Error: {error_msg}"
 
 
+@requires_scope(auth_config.incident_read_scope)
 async def search_incidents(
     active: bool = True,
     requested_by: Optional[str] = None,
@@ -319,11 +308,7 @@ async def search_incidents(
     Returns:
         Formatted list of matching incidents or error message
     """
-    # Check authentication and authorization
-    from auth.scope_validator import check_scope_access
-    user = await check_scope_access(auth_config.incident_read_scope)
-    
-    logger.info(f"Searching incidents with specified criteria (user: {user.claims.get('sub', 'unknown')})")
+    logger.info(f"Searching incidents with specified criteria")
     
     try:
         container = get_container()

@@ -1,15 +1,17 @@
-"""Authentication module for ServiceNow MCP Server."""
+"""Simplified authentication module for ServiceNow MCP Server."""
 
-from .bearer_token import AccessToken, IdentityAuthProvider, get_current_user
-from .scope_validator import require_scope, get_current_user_info
-from .identity_provider import IdentityProviderAuth, create_identity_provider
+from .unified_auth import UnifiedAuth, get_auth, authenticate_request, require_scope
+from .simple_middleware import SimpleAuthMiddleware, get_current_user, require_scope_simple
+from .decorators import requires_scope, optional_auth
 
 __all__ = [
-    "AccessToken",
-    "IdentityAuthProvider", 
-    "get_current_user",
+    "UnifiedAuth",
+    "get_auth",
+    "authenticate_request", 
     "require_scope",
-    "get_current_user_info",
-    "IdentityProviderAuth",
-    "create_identity_provider"
+    "SimpleAuthMiddleware",
+    "get_current_user",
+    "require_scope_simple",
+    "requires_scope",
+    "optional_auth"
 ]

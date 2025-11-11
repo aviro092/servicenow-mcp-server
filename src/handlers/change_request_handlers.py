@@ -1,9 +1,9 @@
-"""MCP tool handlers for change request management."""
+"""Simplified MCP tool handlers for change request management."""
 
 import logging
 from typing import Optional
 
-from auth import require_scope
+from auth.decorators import requires_scope
 from config import get_auth_config
 from container import get_container
 from tools.change_request_tools import format_change_request_display, get_change_request_fields_info
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 auth_config = get_auth_config()
 
 
+@requires_scope(auth_config.change_request_read_scope)
 async def search_change_requests(
     active: bool = True,
     requested_by: Optional[str] = None,
@@ -50,8 +51,6 @@ async def search_change_requests(
     Returns:
         Formatted list of matching change requests or error message
     """
-    # Check authentication and authorization
-    require_scope(auth_config.change_request_read_scope)
     
     logger.info("Searching change requests with specified criteria")
     
@@ -147,6 +146,7 @@ async def search_change_requests(
 
 
 
+@requires_scope(auth_config.change_request_read_scope)
 async def get_change_request(changerequest_number: str) -> str:
     """Get change request record details by change request number.
     
@@ -166,8 +166,6 @@ async def get_change_request(changerequest_number: str) -> str:
         - Technical information (CMDB CI, conflict status)
         - Work notes and comments
     """
-    # Check authentication and authorization
-    require_scope(auth_config.change_request_read_scope)
     logger.info(f"Fetching change request details for: {changerequest_number}")
     
     try:
@@ -200,18 +198,18 @@ async def get_change_request(changerequest_number: str) -> str:
 
 
 
+@requires_scope(auth_config.change_request_read_scope)
 async def list_change_request_fields() -> str:
     """List all available change request fields and their descriptions.
     
     Returns:
         Formatted list of change request fields with descriptions and examples
     """
-    # Check authentication and authorization
-    require_scope(auth_config.change_request_read_scope)
     return get_change_request_fields_info()
 
 
 
+@requires_scope(auth_config.change_request_write_scope)
 async def update_change_request(
     changerequest_number: str,
     company_name: str,
@@ -240,8 +238,6 @@ async def update_change_request(
     Returns:
         Success message with updated change request details or error message
     """
-    # Check authentication and authorization
-    require_scope(auth_config.change_request_write_scope)
     
     logger.info(f"Updating change request: {changerequest_number}")
     
@@ -302,6 +298,7 @@ async def update_change_request(
 
 
 
+@requires_scope(auth_config.change_request_write_scope)
 async def approve_change_request(
     changerequest_number: str,
     state: str,
@@ -329,8 +326,6 @@ async def approve_change_request(
         - Only valid approval users can perform this action
         - The approval is recorded with timestamp and approver details
     """
-    # Check authentication and authorization
-    require_scope(auth_config.change_request_write_scope)
     
     logger.info(f"Processing {state} for change request: {changerequest_number}")
     

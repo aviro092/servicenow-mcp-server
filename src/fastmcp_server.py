@@ -11,8 +11,8 @@ from container import get_container, cleanup_container
 from registry import register_all_tools
 from routes.health import health_check
 from routes import oauth
-from auth.identity_provider import create_identity_provider, IdentityProviderAuth
-from auth.mcp_auth_middleware import MCPAuthMiddleware
+from auth.simple_middleware import SimpleAuthMiddleware
+from auth.unified_auth import get_auth
 from config import get_auth_config
 
 # Setup logging
@@ -25,24 +25,17 @@ logger = logging.getLogger(__name__)
 
 def create_server() -> FastMCP:
     """Create and configure the FastMCP server."""
-    # Check if authentication should be enabled
+    # Initialize simplified authentication
+    auth = get_auth()
     auth_config = get_auth_config()
-    auth_provider = None
     
-    if auth_config.enable_auth:
-        logger.info(f"[SERVER] Authentication ENABLED - mode: {auth_config.auth_mode}")
+    if auth.enabled:
+        logger.info(f"[SERVER] Authentication ENABLED - mode: {auth.mode}")
         logger.info(f"[SERVER] JWKS URI: {auth_config.identity_jwks_uri}")
         logger.info(f"[SERVER] API Identifier: {auth_config.api_identifier}")
-        # Initialize the auth provider for use in handlers
-        auth_provider = create_identity_provider()
-        logger.info("[SERVER] Authentication provider initialized successfully")
+        logger.info("[SERVER] Simplified authentication initialized successfully")
     else:
         logger.info("[SERVER] Authentication DISABLED - all requests will be allowed")
-        auth_provider = None
-    
-    # Store auth provider globally for handlers to access
-    import builtins
-    builtins.global_auth_provider = auth_provider
     
     server = FastMCP(
         name="servicenow-mcp",
@@ -50,9 +43,9 @@ def create_server() -> FastMCP:
         version="0.1.0"
     )
     
-    # Add authentication middleware to capture Bearer tokens
-    server.add_middleware(MCPAuthMiddleware)
-    logger.info("Added MCP authentication middleware")
+    # Add simplified authentication middleware
+    server.add_middleware(SimpleAuthMiddleware)
+    logger.info("Added simplified authentication middleware")
     
     # Register health check route
     server.custom_route("/health", methods=["GET"])(health_check)
