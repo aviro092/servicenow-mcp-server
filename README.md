@@ -147,7 +147,7 @@ MCP_AUTH_INCIDENT_TASK_WRITE_SCOPE=servicenow.incidenttask.write
 
 ### Authentication Modes
 
-The server supports two authentication modes:
+The server supports three authentication modes:
 
 #### 1. Mock Authentication (Development)
 ```env
@@ -164,6 +164,27 @@ MCP_AUTH_IDENTITY_JWKS_URI=https://your-identity-provider.com/.well-known/jwks.j
 MCP_AUTH_API_IDENTIFIER=your-api-identifier
 ```
 Uses JWT token verification with OIDC-compatible identity provider.
+
+#### 3. OAuth Authentication (MCP Standard)
+```env
+MCP_AUTH_ENABLE_AUTH=true
+MCP_AUTH_AUTH_MODE=oauth
+MCP_AUTH_OAUTH_AUTHORIZATION_ENDPOINT=http://localhost:8000/oauth/authorize
+MCP_AUTH_OAUTH_TOKEN_ENDPOINT=http://localhost:8000/oauth/token
+MCP_AUTH_OAUTH_CLIENT_ID=mcp_demo_client
+MCP_AUTH_OAUTH_CLIENT_SECRET=demo_secret_12345
+MCP_AUTH_OAUTH_REDIRECT_URI=http://localhost:3000/callback
+MCP_AUTH_RESOURCE_SERVER_URL=http://localhost:8000
+MCP_AUTH_REALM=ServiceNow MCP Server
+```
+Implements full MCP OAuth authentication flow per [MCP OAuth specification](https://www.mcpjam.com/blog/mcp-oauth-guide) with:
+- Protected Resource Metadata discovery
+- Authorization Server Metadata discovery  
+- Dynamic Client Registration (DCR)
+- Client ID Metadata Document (CIMD)
+- Authorization Code Flow with PKCE
+- Client Credentials Flow
+- JWT access token validation
 
 ### Authorization Scopes
 
@@ -183,14 +204,15 @@ Uses JWT token verification with OIDC-compatible identity provider.
 
 ### Running the Server
 
-#### Stdio Transport (Default)
+#### HTTP Transport (Default)
 ```bash
-python scripts/run_fastmcp_server.py --transport stdio
+python scripts/run_fastmcp_server.py
+# Or explicitly: python scripts/run_fastmcp_server.py --transport http --host 0.0.0.0 --port 8000
 ```
 
-#### HTTP Transport
+#### Stdio Transport
 ```bash
-python scripts/run_fastmcp_server.py --transport http --host 0.0.0.0 --port 8000
+python scripts/run_fastmcp_server.py --transport stdio
 ```
 
 #### SSE Transport
@@ -234,15 +256,35 @@ python test_update_incident.py
 
 # Test incident search functionality
 python test_search_incidents.py
+
+# Test OAuth authentication flow
+python test_oauth_flow.py
 ```
 
 ## API Endpoints (HTTP/SSE Transport)
 
+### Core MCP Endpoints
 - **Root**: `http://localhost:8000/` - Server information
 - **Health**: `http://localhost:8000/health` - Health check endpoint
 - **Tools**: `http://localhost:8000/mcp/tools` - List available tools
 - **Call**: `http://localhost:8000/mcp/call` - Execute tool calls
 - **SSE**: `http://localhost:8000/sse` - Server-sent events endpoint
+
+### OAuth Authentication Endpoints
+- **Protected Resource Metadata**: `http://localhost:8000/.well-known/oauth-protected-resource` - RFC 8707 metadata
+- **Authorization Server Metadata**: `http://localhost:8000/.well-known/oauth-authorization-server` - RFC 8414 metadata  
+- **Dynamic Client Registration**: `http://localhost:8000/oauth/register` - RFC 7591 client registration
+- **Client Metadata**: `http://localhost:8000/oauth/clients/{client_id}` - Client ID Metadata Document
+- **Authorization**: `http://localhost:8000/oauth/authorize` - OAuth authorization endpoint
+- **Token**: `http://localhost:8000/oauth/token` - OAuth token endpoint  
+- **User Info**: `http://localhost:8000/oauth/userinfo` - User information endpoint
+
+### OAuth Flow Example
+1. **Discovery**: GET `/.well-known/oauth-protected-resource` for metadata
+2. **Registration**: POST `/oauth/register` to register client (optional)
+3. **Authorization**: GET `/oauth/authorize?client_id=...&scope=...` for user consent
+4. **Token Exchange**: POST `/oauth/token` to exchange code for access token
+5. **API Access**: Use `Authorization: Bearer {token}` header for MCP endpoints
 
 ## Available Tools
 
@@ -396,7 +438,7 @@ The server connects to ServiceNow's custom API endpoints:
 
 ## CrewAI Integration
 
-For CrewAI compatibility, use the HTTP transport:
+The server runs on HTTP transport by default, making it immediately compatible with CrewAI:
 
 ```python
 # In your CrewAI configuration

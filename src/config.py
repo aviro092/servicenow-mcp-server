@@ -118,6 +118,20 @@ class ServerConfig(BaseSettings):
 
 def get_servicenow_config() -> ServiceNowConfig:
     """Get ServiceNow configuration instance."""
+    import logging
+    
+    # Debug environment variables
+    servicenow_vars = {k: v for k, v in os.environ.items() if k.startswith('SERVICENOW_')}
+    logging.info(f"Found ServiceNow environment variables: {list(servicenow_vars.keys())}")
+    
+    # Check if required variables are present
+    required_vars = ['SERVICENOW_BASE_URL', 'SERVICENOW_CLIENT_ID', 'SERVICENOW_CLIENT_SECRET']
+    missing_vars = [var for var in required_vars if var not in os.environ]
+    
+    if missing_vars:
+        logging.error(f"Missing required environment variables: {missing_vars}")
+        logging.info(f"Available environment variables: {list(os.environ.keys())}")
+    
     return ServiceNowConfig()
 
 
@@ -133,7 +147,49 @@ class MCPAuthConfig(BaseSettings):
     # Authentication Mode
     auth_mode: str = Field(
         "mock",
-        description="Authentication mode: 'mock' or 'identity-provider'"
+        description="Authentication mode: 'mock', 'identity-provider', or 'oauth'"
+    )
+    
+    # OAuth Configuration
+    oauth_authorization_endpoint: str = Field(
+        "https://authorization-server.com/oauth/authorize",
+        description="OAuth authorization endpoint URL"
+    )
+    
+    oauth_token_endpoint: str = Field(
+        "https://authorization-server.com/oauth/token", 
+        description="OAuth token endpoint URL"
+    )
+    
+    oauth_client_id: Optional[str] = Field(
+        None,
+        description="OAuth client ID for the MCP server"
+    )
+    
+    oauth_client_secret: Optional[str] = Field(
+        None,
+        description="OAuth client secret for the MCP server"
+    )
+    
+    oauth_redirect_uri: str = Field(
+        "http://localhost:3000/callback",
+        description="OAuth redirect URI for authorization callback"
+    )
+    
+    oauth_scope: str = Field(
+        "servicenow.read servicenow.write",
+        description="Default OAuth scopes to request"
+    )
+    
+    # Resource server configuration
+    resource_server_url: str = Field(
+        "http://localhost:8000",
+        description="MCP server resource URL"
+    )
+    
+    realm: str = Field(
+        "ServiceNow MCP Server",
+        description="Authentication realm name"
     )
     
     # Identity Provider Configuration

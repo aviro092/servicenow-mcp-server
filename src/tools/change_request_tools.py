@@ -447,7 +447,7 @@ def format_change_request_display(change_request: Dict[str, Any]) -> str:
         additional_info.append(f"Reason: {change_request.get('reason')}")
     
     if additional_info:
-        lines.append("\n🔍 ADDITIONAL INFORMATION")
+        lines.append("\nADDITIONAL INFORMATION")
         lines.append("-" * 30)
         lines.extend(additional_info)
     

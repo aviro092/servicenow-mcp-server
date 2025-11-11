@@ -8,8 +8,8 @@ services:
     image: servicenow-mcp-server:latest
     container_name: servicenow-mcp-server
     
-    # Default command using FastMCP server
-    command: ["python", "/app/scripts/run_fastmcp_server.py", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
+    # Default command using FastMCP server (HTTP is now default transport)
+    command: ["python", "/app/scripts/run_fastmcp_server.py", "--host", "0.0.0.0", "--port", "8000"]
     
     # Ports for HTTP/SSE transport
     ports:

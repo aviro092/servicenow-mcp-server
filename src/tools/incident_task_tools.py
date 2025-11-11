@@ -310,7 +310,7 @@ def format_incident_task_display(incident_task: Dict[str, Any]) -> str:
     
     # Direct URL
     if incident_task.get("url"):
-        lines.append("\n🔗 DIRECT LINK")
+        lines.append("\nDIRECT LINK")
         lines.append("-" * 30)
         lines.append(f"URL: {incident_task.get('url')}")
     
