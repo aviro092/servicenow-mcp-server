@@ -561,15 +561,38 @@ class IncidentTools:
             # Make the API call
             search_results = await self.client.search_incidents(validated_data)
             
+            # Debug logging to understand the response format
+            logger.debug(f"Search results type: {type(search_results)}")
+            logger.debug(f"Search results content: {search_results}")
+            
             # Handle different response formats
-            if isinstance(search_results, list):
+            if isinstance(search_results, str):
+                # Handle string response - this shouldn't happen but let's be defensive
+                logger.warning(f"Received string response from search_incidents: {search_results}")
+                return {
+                    "error": f"Unexpected string response from API: {search_results}",
+                    "error_type": "api_error"
+                }
+            elif isinstance(search_results, list):
                 incidents = search_results
-            elif isinstance(search_results, dict) and "incidents" in search_results:
-                incidents = search_results["incidents"]
-            elif isinstance(search_results, dict) and "result" in search_results:
-                incidents = search_results["result"]
+            elif isinstance(search_results, dict):
+                if "incidents" in search_results:
+                    incidents = search_results["incidents"]
+                elif "result" in search_results:
+                    incidents = search_results["result"]
+                else:
+                    # If it's a dict but doesn't have expected keys, treat it as a single incident
+                    incidents = [search_results]
             else:
-                incidents = search_results if isinstance(search_results, list) else [search_results]
+                # Fallback - try to convert to list
+                try:
+                    incidents = [search_results] if search_results is not None else []
+                except Exception as e:
+                    logger.error(f"Could not handle search results format: {type(search_results)}, error: {e}")
+                    return {
+                        "error": f"Unexpected response format from API: {type(search_results)}",
+                        "error_type": "api_error"
+                    }
             
             # Ensure incidents is a list
             if not isinstance(incidents, list):

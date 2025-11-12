@@ -43,9 +43,8 @@ def create_server() -> FastMCP:
         version="0.1.0"
     )
     
-    # Add simplified authentication middleware
-    server.add_middleware(SimpleAuthMiddleware)
-    logger.info("Added simplified authentication middleware")
+    # Note: Middleware disabled due to FastMCP compatibility issues
+    logger.info("Authentication middleware disabled for FastMCP compatibility")
     
     # Register health check route
     server.custom_route("/health", methods=["GET"])(health_check)

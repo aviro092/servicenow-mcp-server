@@ -83,7 +83,27 @@ class ChangeRequestTools:
             # Perform the search
             result = await self.client.search_change_requests(search_params)
             
-            if result.get("success"):
+            # Debug logging to understand the response format
+            logger.debug(f"Search results type: {type(result)}")
+            logger.debug(f"Search results content: {result}")
+            
+            # Handle different response formats
+            if isinstance(result, str):
+                # Handle string response - this shouldn't happen but let's be defensive
+                logger.warning(f"Received string response from search_change_requests: {result}")
+                return {
+                    "error": f"Unexpected string response from API: {result}",
+                    "error_type": "api_error"
+                }
+            elif not isinstance(result, (dict, list)):
+                logger.error(f"Unexpected result type: {type(result)}")
+                return {
+                    "error": f"Unexpected response format from API: {type(result)}",
+                    "error_type": "api_error"
+                }
+            
+            # Handle dict response
+            if isinstance(result, dict) and result.get("success"):
                 logger.info(f"Successfully found {result.get('count', 0)} change requests")
                 return {
                     "success": True,
@@ -93,13 +113,25 @@ class ChangeRequestTools:
                     "message": f"Found {result.get('count', 0)} change request(s)"
                 }
             else:
-                error_msg = result.get("error", "Unknown error occurred during search")
-                logger.warning(f"Change request search failed: {error_msg}")
-                return {
-                    "error": error_msg,
-                    "error_type": "search_error",
-                    "search_criteria": search_params
-                }
+                # Handle cases where result is dict but doesn't have success field
+                if isinstance(result, dict):
+                    error_msg = result.get("error", "Unknown error occurred during search")
+                    logger.warning(f"Change request search failed: {error_msg}")
+                    return {
+                        "error": error_msg,
+                        "error_type": "search_error",
+                        "search_criteria": search_params
+                    }
+                else:
+                    # Handle list or other formats - treat as raw results
+                    logger.info(f"Received raw results list with {len(result) if isinstance(result, list) else 1} change requests")
+                    return {
+                        "success": True,
+                        "count": len(result) if isinstance(result, list) else 1,
+                        "change_requests": result if isinstance(result, list) else [result],
+                        "search_criteria": search_params,
+                        "message": f"Found {len(result) if isinstance(result, list) else 1} change request(s)"
+                    }
                 
         except ValueError as e:
             error_msg = f"Invalid search parameters: {str(e)}"

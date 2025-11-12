@@ -79,6 +79,15 @@ async def search_change_requests(
         
         result = await tools.search_change_requests(**search_params)
         
+        # Debug logging to understand the result type and content
+        logger.debug(f"Search result type: {type(result)}")
+        logger.debug(f"Search result content: {result}")
+        
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from search_change_requests. Expected dict but got {type(result)}"
+        
         # Check for errors in the response
         if "error" in result:
             error_msg = result["error"]
@@ -260,6 +269,11 @@ async def update_change_request(
         
         result = await tools.update_change_request(changerequest_number, **update_params)
         
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from update_change_request. Expected dict but got {type(result)}"
+        
         # Check for errors in the response
         if "error" in result:
             error_msg = result["error"]
@@ -340,6 +354,11 @@ async def approve_change_request(
             approver_name=approver_name,
             on_behalf=on_behalf
         )
+        
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from approve_change_request. Expected dict but got {type(result)}"
         
         # Check for errors in the response
         if "error" in result:

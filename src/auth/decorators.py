@@ -20,12 +20,20 @@ def requires_scope(scope: str):
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
-            # Check scope
-            user_info = require_scope_simple(scope)
+            # Check if authentication is enabled
+            from config import get_auth_config
+            auth_config = get_auth_config()
             
-            # Log access
-            user = user_info.get("user", "unknown")
-            logger.info(f"User '{user}' accessing {func.__name__} with scope '{scope}'")
+            if auth_config.enable_auth:
+                # Check scope when auth is enabled
+                user_info = require_scope_simple(scope)
+                
+                # Log access
+                user = user_info.get("user", "unknown")
+                logger.info(f"User '{user}' accessing {func.__name__} with scope '{scope}'")
+            else:
+                # Skip authentication when disabled
+                logger.debug(f"Authentication disabled - allowing access to {func.__name__}")
             
             # Call original function
             return await func(*args, **kwargs)

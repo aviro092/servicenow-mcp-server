@@ -333,6 +333,15 @@ async def search_incidents(
         
         result = await tools.search_incidents(**search_params)
         
+        # Debug logging to understand the result type and content
+        logger.debug(f"Search result type: {type(result)}")
+        logger.debug(f"Search result content: {result}")
+        
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from search_incidents. Expected dict but got {type(result)}"
+        
         # Check for errors in the response
         if "error" in result:
             error_msg = result["error"]
@@ -379,6 +388,14 @@ async def search_incidents(
                 else:
                     lines.append(f"\n{i}. {str(incident)}")
                     lines.append(f"   Note: Unexpected incident data format: {type(incident)}")
+                    
+                    # Try to convert to dict if it's another type that might have dict-like properties
+                    try:
+                        if hasattr(incident, '__dict__'):
+                            incident_dict = incident.__dict__
+                            lines.append(f"   Converted to dict: {incident_dict}")
+                    except Exception as e:
+                        lines.append(f"   Could not convert to dict: {str(e)}")
             
             if count > 10:
                 lines.append(f"\n... and {count - 10} more incidents")

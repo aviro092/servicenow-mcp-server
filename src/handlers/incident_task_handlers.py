@@ -118,6 +118,11 @@ async def update_incident_task(
             assigned_to=assigned_to
         )
         
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from update_incident_task. Expected dict but got {type(result)}"
+        
         # Check for errors in the response
         if "error" in result:
             error_msg = result["error"]
@@ -203,6 +208,11 @@ async def create_incident_task(
             assignment_group=assignment_group,
             assigned_to=assigned_to
         )
+        
+        # Handle case where result is not a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Expected dict result but got {type(result)}: {result}")
+            return f"Error: Unexpected result format from create_incident_task. Expected dict but got {type(result)}"
         
         # Check for errors in the response
         if "error" in result:
